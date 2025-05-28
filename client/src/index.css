@@ -99,19 +99,23 @@
 
 @layer components {
   .quiz-option {
-    @apply flex items-start space-x-3 p-4 border border-border rounded-xl hover:bg-muted/50 cursor-pointer transition-all duration-300;
-    background: rgba(255, 255, 255, 0.02);
+    @apply flex items-start space-x-4 p-5 border-2 border-border/50 rounded-xl hover:bg-muted/30 cursor-pointer transition-all duration-300;
+    background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   }
   
   .quiz-option:has(input:checked) {
-    @apply border-primary bg-primary/10 glow-effect;
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+    @apply border-primary bg-primary/15 glow-effect;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+    border-color: hsl(var(--primary));
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
   }
   
   .quiz-option:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(124, 58, 237, 0.2);
+    background: rgba(255, 255, 255, 0.12);
   }
 
   .quiz-card {

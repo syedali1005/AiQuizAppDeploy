@@ -42,11 +42,11 @@ export function QuestionContent({
                   <RadioGroupItem 
                     value={option} 
                     id={`option-${index}`}
-                    className="mt-1 text-primary"
+                    className="mt-1 text-primary border-2 border-primary/30"
                   />
                   <Label 
                     htmlFor={`option-${index}`}
-                    className="text-gray-900 cursor-pointer flex-1"
+                    className="text-foreground cursor-pointer flex-1 font-medium text-base leading-relaxed"
                   >
                     {option}
                   </Label>
@@ -64,9 +64,9 @@ export function QuestionContent({
                 <RadioGroupItem 
                   value="True" 
                   id="true-option"
-                  className="mt-1 text-primary"
+                  className="mt-1 text-primary border-2 border-primary/30"
                 />
-                <Label htmlFor="true-option" className="text-gray-900 cursor-pointer flex-1">
+                <Label htmlFor="true-option" className="text-foreground cursor-pointer flex-1 font-medium text-base leading-relaxed">
                   True
                 </Label>
               </div>
@@ -74,9 +74,9 @@ export function QuestionContent({
                 <RadioGroupItem 
                   value="False" 
                   id="false-option"
-                  className="mt-1 text-primary"
+                  className="mt-1 text-primary border-2 border-primary/30"
                 />
-                <Label htmlFor="false-option" className="text-gray-900 cursor-pointer flex-1">
+                <Label htmlFor="false-option" className="text-foreground cursor-pointer flex-1 font-medium text-base leading-relaxed">
                   False
                 </Label>
               </div>
