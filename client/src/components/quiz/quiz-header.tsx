@@ -67,9 +67,9 @@ export function QuizHeader({
               </Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-white bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm">
-                <Clock className="w-4 h-4 text-blue-300" />
-                <span className="font-mono font-medium">{timeRemaining}</span>
+              <div className="flex items-center space-x-2 text-sm text-white bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm animate-pulse-glow">
+                <Clock className="w-4 h-4 text-blue-300 animate-spin" style={{animationDuration: '8s'}} />
+                <span className="font-mono font-medium animate-shimmer">{timeRemaining}</span>
               </div>
               <Button 
                 variant="ghost" 
@@ -83,14 +83,17 @@ export function QuizHeader({
           </div>
           
           <div className="space-y-3">
-            <Progress value={progressPercentage} className="h-3 bg-white/20" />
+            <div className="relative">
+              <Progress value={progressPercentage} className="h-3 bg-white/20" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-blue-500/30 rounded-full animate-shimmer opacity-50"></div>
+            </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-xs text-green-300">
+              <div className="flex items-center space-x-2 text-xs text-green-300 animate-bounce-in">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span>Progress auto-saved</span>
               </div>
-              <div className="text-xs text-white/60">
+              <div className="text-xs text-white/60 animate-scale-in">
                 {Math.round(progressPercentage)}% Complete
               </div>
             </div>

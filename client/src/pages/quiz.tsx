@@ -241,7 +241,7 @@ export default function Quiz() {
       />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="quiz-card glow-effect">
+        <div className="quiz-card glow-effect animate-slide-in">
           <QuestionContent
             question={currentQuestion}
             answer={answers[currentQuestion.id.toString()] || ''}
@@ -257,7 +257,9 @@ export default function Quiz() {
           />
         </div>
 
-        <CategorySidebar categories={getCategoryProgress()} />
+        <div className="animate-scale-in">
+          <CategorySidebar categories={getCategoryProgress()} />
+        </div>
       </main>
 
       {showResults && sessionId && (

@@ -118,7 +118,7 @@ export function QuestionContent({
           </h2>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-4 animate-bounce-in">
           {renderQuestionInput()}
         </div>
       </div>
