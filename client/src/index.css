@@ -3,29 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 11% 98%; /* #F5F7FA */
-  --foreground: 210 11% 15%; /* #263238 */
-  --muted: 210 11% 93%; /* #ECEFF1 */
-  --muted-foreground: 210 6% 46%; /* #78909C */
-  --popover: 0 0% 100%;
-  --popover-foreground: 210 11% 15%;
-  --card: 0 0% 100%;
-  --card-foreground: 210 11% 15%;
-  --border: 210 11% 87%; /* #CFD8DC */
-  --input: 210 11% 87%;
-  --primary: 207 90% 54%; /* #1565C0 */
-  --primary-foreground: 211 100% 99%;
-  --secondary: 210 11% 93%;
-  --secondary-foreground: 210 11% 15%;
-  --accent: 210 11% 93%;
-  --accent-foreground: 210 11% 15%;
+  --background: 222 84% 4%; /* #0a0b14 */
+  --foreground: 210 40% 98%; /* #f8fafc */
+  --muted: 217 33% 17%; /* #1e293b */
+  --muted-foreground: 215 20% 65%; /* #94a3b8 */
+  --popover: 224 71% 4%; /* #0c0e19 */
+  --popover-foreground: 210 40% 98%;
+  --card: 224 71% 4%; /* #0c0e19 */
+  --card-foreground: 210 40% 98%;
+  --border: 215 28% 17%; /* #334155 */
+  --input: 215 28% 17%;
+  --primary: 262 83% 58%; /* #7c3aed */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
   --destructive: 0 84% 60%;
-  --destructive-foreground: 60 9% 98%;
-  --ring: 207 90% 54%;
-  --radius: 0.5rem;
-  --success: 122 39% 49%; /* #2E7D32 */
-  --warning: 36 100% 50%; /* #F57400 */
-  --error: 0 68% 42%; /* #C62828 */
+  --destructive-foreground: 210 40% 98%;
+  --ring: 262 83% 58%;
+  --radius: 0.75rem;
+  --success: 142 76% 36%; /* #10b981 */
+  --warning: 45 93% 58%; /* #f59e0b */
+  --error: 0 84% 60%; /* #ef4444 */
+  --gradient-from: 262 83% 58%; /* #7c3aed */
+  --gradient-to: 221 83% 53%; /* #3b82f6 */
 }
 
 .dark {
@@ -58,15 +60,74 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(222 84% 6%) 100%);
+    min-height: 100vh;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--gradient-from)) 0%, hsl(var(--gradient-to)) 100%);
+  }
+
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glow-effect {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 10px rgba(124, 58, 237, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.6); }
   }
 }
 
 @layer components {
   .quiz-option {
-    @apply flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors;
+    @apply flex items-start space-x-3 p-4 border border-border rounded-xl hover:bg-muted/50 cursor-pointer transition-all duration-300;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(10px);
   }
   
   .quiz-option:has(input:checked) {
-    @apply border-primary bg-blue-50;
+    @apply border-primary bg-primary/10 glow-effect;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  }
+  
+  .quiz-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
+  }
+
+  .quiz-card {
+    @apply glass-effect rounded-xl p-8;
+  }
+
+  .category-card {
+    @apply glass-effect rounded-lg p-4 transition-all duration-300 hover:scale-105;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+
+  .gradient-header {
+    background: linear-gradient(135deg, hsl(var(--gradient-from)) 0%, hsl(var(--gradient-to)) 100%);
+  }
+
+  .floating-element {
+    @apply animate-float;
   }
 }
