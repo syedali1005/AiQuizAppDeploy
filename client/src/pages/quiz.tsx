@@ -198,6 +198,26 @@ export default function Quiz() {
     });
   };
 
+  // Calculate current score
+  const calculateCurrentScore = () => {
+    let correct = 0;
+    let answered = 0;
+    
+    questions.forEach(question => {
+      const userAnswer = answers[question.id.toString()];
+      if (userAnswer) {
+        answered++;
+        if (userAnswer === question.correctAnswer) {
+          correct++;
+        }
+      }
+    });
+    
+    return { correct, answered };
+  };
+
+  const { correct: correctAnswers, answered: answeredQuestions } = calculateCurrentScore();
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'AI Ethics': return 'brain';

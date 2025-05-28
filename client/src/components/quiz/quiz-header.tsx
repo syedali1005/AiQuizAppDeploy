@@ -2,7 +2,8 @@ import { Clock, Pause, Play, Brain, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import logoPath from '@assets/PHOTO-2025-05-27-15-45-14.jpg';
+import { SparkAILogo } from '@/components/ui/logo';
+import { AgentChat } from './agent-chat';
 
 interface QuizHeaderProps {
   currentQuestion: number;
@@ -11,6 +12,8 @@ interface QuizHeaderProps {
   isRunning: boolean;
   onPauseResume: () => void;
   category: string;
+  correctAnswers?: number;
+  answeredQuestions?: number;
 }
 
 export function QuizHeader({
@@ -19,7 +22,9 @@ export function QuizHeader({
   timeRemaining,
   isRunning,
   onPauseResume,
-  category
+  category,
+  correctAnswers = 0,
+  answeredQuestions = 0
 }: QuizHeaderProps) {
   const progressPercentage = (currentQuestion / totalQuestions) * 100;
 
@@ -29,11 +34,7 @@ export function QuizHeader({
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <img 
-                src={logoPath} 
-                alt="Spark AI Logo" 
-                className="h-10 w-auto floating-element"
-              />
+              <SparkAILogo className="h-10 w-auto floating-element" />
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-bold text-white">AI Audit Assessment</h1>
                 <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
@@ -41,14 +42,26 @@ export function QuizHeader({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-white/80 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">
-              <span className="font-medium">Assessment Session</span> | 
-              <span className="ml-1">{new Date().toLocaleDateString()}</span>
+            {/* Score Display */}
+            <div className="flex items-center space-x-3">
+              <div className="text-sm text-white/80 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">
+                <span className="font-medium">Score: </span>
+                <span className="text-green-300 font-bold">{correctAnswers}</span>
+                <span className="text-white/60">/{answeredQuestions}</span>
+              </div>
+              <div className="text-sm text-white/80 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">
+                <span className="font-medium">Assessment Session</span> | 
+                <span className="ml-1">{new Date().toLocaleDateString()}</span>
+              </div>
             </div>
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-              <span className="sr-only">Export Results</span>
-              📥
-            </Button>
+            
+            <div className="flex items-center space-x-2">
+              <AgentChat />
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                <span className="sr-only">Export Results</span>
+                📥
+              </Button>
+            </div>
           </div>
         </div>
       </div>
