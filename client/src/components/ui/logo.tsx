@@ -17,6 +17,10 @@ export function SparkAILogo({ className = "h-10 w-auto" }: LogoProps) {
           <stop offset="50%" stopColor="#a855f7" />
           <stop offset="100%" stopColor="#3b82f6" />
         </linearGradient>
+        <linearGradient id="textGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#1e293b" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
       </defs>
       
       {/* Lightning bolt shape */}
@@ -26,27 +30,29 @@ export function SparkAILogo({ className = "h-10 w-auto" }: LogoProps) {
         className="drop-shadow-lg"
       />
       
-      {/* Spark AI Text */}
+      {/* Spark AI Text with gradient/dark fill */}
       <text
         x="45"
         y="25"
-        className="fill-white font-bold text-xl"
         fontSize="18"
         fontFamily="Inter, system-ui, sans-serif"
+        fontWeight="bold"
+        fill="url(#textGradient)"
+        style={{ letterSpacing: 1 }}
       >
         Spark
       </text>
-      
       <text
         x="105"
         y="25"
-        className="fill-white font-bold text-xl"
         fontSize="18"
         fontFamily="Inter, system-ui, sans-serif"
+        fontWeight="bold"
+        fill="url(#textGradient)"
+        style={{ letterSpacing: 1 }}
       >
         AI
       </text>
-      
       {/* Subtle glow effect */}
       <circle
         cx="22"

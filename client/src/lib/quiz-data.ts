@@ -8,32 +8,7 @@ export interface QuizCategory {
   description: string;
 }
 
-export const QUIZ_CATEGORIES: QuizCategory[] = [
-  {
-    id: 'ai-ethics',
-    name: 'AI Ethics',
-    icon: 'brain',
-    description: 'Principles of ethical AI development and deployment'
-  },
-  {
-    id: 'compliance',
-    name: 'Compliance',
-    icon: 'shield-alt',
-    description: 'Regulatory compliance and legal requirements'
-  },
-  {
-    id: 'risk-management',
-    name: 'Risk Management',
-    icon: 'exclamation-triangle',
-    description: 'Identifying and mitigating AI-related risks'
-  },
-  {
-    id: 'implementation',
-    name: 'Implementation',
-    icon: 'cogs',
-    description: 'Best practices for AI system implementation'
-  }
-];
+export const QUIZ_CATEGORIES: QuizCategory[] = [];
 
 export const QUIZ_SETTINGS = {
   DURATION_MINUTES: 30,

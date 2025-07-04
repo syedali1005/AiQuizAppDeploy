@@ -1,11 +1,12 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Download, RotateCcw, Eye, X } from 'lucide-react';
+import { Download, RotateCcw } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import type { QuizResult } from '@shared/schema';
+import type { QuizResult, Question, QuizSession } from '@shared/schema';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 
 interface ResultsModalProps {
   sessionId: number;
@@ -14,41 +15,75 @@ interface ResultsModalProps {
 }
 
 export function ResultsModal({ sessionId, onClose, onNewAssessment }: ResultsModalProps) {
-  const { data: results = [], isLoading } = useQuery<QuizResult[]>({
+  const { data: results = [], isLoading: isLoadingResults, error: resultsError } = useQuery<QuizResult[]>({
     queryKey: ['/api/quiz-results/session', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/quiz-results/session/${sessionId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch results');
+      }
+      const data = await response.json();
+      console.log('Fetched results:', data); // Debug log
+      return data;
+    },
+    enabled: !!sessionId,
+    refetchInterval: 1000,
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
+    queryKey: ['/api/questions'],
+  });
+
+  const { data: session, isLoading: isLoadingSession } = useQuery<QuizSession>({
+    queryKey: ['/api/quiz-sessions', sessionId],
   });
 
   const exportMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('GET', `/api/quiz-results/${results[0]?.id}/export`, undefined);
+      if (!results.length) throw new Error('No results available');
+      const response = await fetch(`/api/quiz-results/${results[0].id}/export`);
       return response.json();
     },
     onSuccess: (data) => {
       console.log('Export initiated:', data);
-      // In a real implementation, this would trigger a download
     },
   });
 
+  console.log('Current results:', results); // Debug log
   const result = results[0];
+  const isLoading = isLoadingResults || isLoadingQuestions || isLoadingSession;
 
-  if (isLoading) {
+  if (isLoading || !result) {
     return (
-      <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Loading Results</CardTitle>
+          <CardDescription>
+            {resultsError 
+              ? "Error loading results. Please try again." 
+              : "Please wait while we calculate your results..."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          {resultsError && (
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!result) return null;
+  if (!session) return null;
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-green-600 dark:text-green-400';
+    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   const getScoreBadgeVariant = (score: number): "default" | "secondary" | "destructive" => {
@@ -57,107 +92,86 @@ export function ResultsModal({ sessionId, onClose, onNewAssessment }: ResultsMod
     return 'destructive';
   };
 
-  const categoryBreakdown = result.categoryBreakdown as Record<string, { correct: number; total: number }>;
-
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold text-gray-900">
-              Assessment Results
-            </DialogTitle>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {/* Overall Score */}
-          <div className="text-center py-8 bg-gradient-to-r from-green-50 to-green-25 rounded-lg">
-            <div className={`text-4xl font-bold mb-2 ${getScoreColor(result.overallScore)}`}>
-              {result.overallScore}%
-            </div>
-            <div className="text-lg text-gray-700 mb-1">Overall Score</div>
-            <div className="text-sm text-gray-600 mb-4">
-              {result.correctAnswers} of {result.totalQuestions} questions correct
-            </div>
-            <Badge variant={getScoreBadgeVariant(result.overallScore)}>
-              {result.overallScore >= 80 ? 'Excellent' : 
-               result.overallScore >= 60 ? 'Good' : 'Needs Improvement'}
-            </Badge>
-          </div>
-          
-          {/* Category Breakdown */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Category Performance</h3>
-            
-            {Object.entries(categoryBreakdown).map(([category, scores]) => {
-              const percentage = Math.round((scores.correct / scores.total) * 100);
-              const getCategoryIcon = (cat: string) => {
-                switch (cat) {
-                  case 'AI Ethics': return '🧠';
-                  case 'Compliance': return '🛡️';
-                  case 'Risk Management': return '⚠️';
-                  case 'Implementation': return '⚙️';
-                  default: return '📋';
-                }
-              };
-
-              return (
-                <div key={category} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${
-                      percentage >= 80 ? 'bg-green-500' : 
-                      percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}>
-                      <span className="text-xs">{getCategoryIcon(category)}</span>
-                    </div>
-                    <span className="font-medium text-gray-900">{category}</span>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Assessment Results</CardTitle>
+          <CardDescription>
+            Here's how you performed in the assessment
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Overall Score</h3>
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <motion.span 
+                      className={`text-4xl font-bold ${getScoreColor(result.overallScore)}`}
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                      {result.overallScore}%
+                    </motion.span>
+                    <motion.div 
+                      className="absolute -inset-4 bg-primary/10 rounded-full -z-10"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: 0.1 }}
+                    />
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600">
-                      {scores.correct}/{scores.total} correct
-                    </span>
-                    <span className={`font-semibold ${getScoreColor(percentage)}`}>
-                      {percentage}%
-                    </span>
-                  </div>
+                  <Badge variant={getScoreBadgeVariant(result.overallScore)}>
+                    {result.correctAnswers} / {result.totalQuestions} correct
+                  </Badge>
                 </div>
-              );
-            })}
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-            <Button variant="outline" className="flex items-center space-x-2">
-              <Eye className="w-4 h-4" />
-              <span>Review Answers</span>
-            </Button>
-            
-            <div className="flex items-center space-x-3">
-              <Button 
-                variant="outline" 
-                className="flex items-center space-x-2"
-                onClick={() => exportMutation.mutate()}
-                disabled={exportMutation.isPending}
-              >
-                <Download className="w-4 h-4" />
-                <span>Export PDF</span>
-              </Button>
-              
-              <Button 
-                className="flex items-center space-x-2"
-                onClick={onNewAssessment}
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span>New Assessment</span>
-              </Button>
+              </div>
+              <div className="space-x-2">
+                <Button variant="outline" onClick={onNewAssessment}>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  New Assessment
+                </Button>
+                <Button onClick={() => exportMutation.mutate()}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Results
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Category Breakdown</h3>
+              <div className="space-y-4">
+                {Object.entries(result.categoryBreakdown as Record<string, { correct: number; total: number }>)
+                  .filter(([_, scores]) => scores.total > 0)
+                  .map(([category, scores], index) => {
+                    const percentage = Math.round((scores.correct / scores.total) * 100);
+                    return (
+                      <motion.div 
+                        key={category} 
+                        className="space-y-2"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <div className="flex justify-between">
+                          <span className="font-medium">{category}</span>
+                          <span className={getScoreColor(percentage)}>{percentage}%</span>
+                        </div>
+                        <Progress value={percentage} className="h-2" />
+                      </motion.div>
+                    );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

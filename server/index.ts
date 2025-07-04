@@ -1,10 +1,30 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import OpenAI from 'openai';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Initialize OpenAI client only if API key is available
+let openai: OpenAI | null = null;
+try {
+  if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  } else {
+    console.log('Warning: OPENAI_API_KEY not found. AI features will be disabled.');
+  }
+} catch (error) {
+  console.error('Error initializing OpenAI:', error);
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -47,24 +67,58 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  if (app.get("env") === "production") {
+    const distPath = path.resolve(import.meta.dirname, "public");
+    app.use(express.static(distPath));
+    
+    app.get("*", (req, res) => {
+      if (!req.path.startsWith("/api")) {
+        res.sendFile(path.resolve(distPath, "index.html"));
+      }
+    });
   } else {
-    serveStatic(app);
+    await setupVite(app, server);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  app.post('/api/ai/chat', async (req, res) => {
+    if (!openai) {
+      return res.status(503).json({ 
+        error: 'AI service is not available. Please configure OPENAI_API_KEY to enable AI features.',
+        isConfigError: true
+      });
+    }
+
+    try {
+      const { message, category, questionType } = req.body;
+
+      const completion = await openai.chat.completions.create({
+        model: "o4-mini-2025-04-16",
+        messages: [
+          {
+            role: "system",
+            content: `You are a helpful AI assistant specializing in business automation and digital transformation solutions. 
+            You are currently helping with the ${category} category, specifically for ${questionType} type questions.
+            Provide specific, actionable recommendations for tools and processes that can help automate and improve business operations.
+            Keep responses concise and focused on practical solutions.`
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      res.json({ response: completion.choices[0].message.content });
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      res.status(500).json({ error: 'Failed to get AI response' });
+    }
+  });
+
+  const port = parseInt(process.env.PORT || '5000', 10);
+  server.listen(port, '127.0.0.1', () => {
+    log(`Server running at http://127.0.0.1:${port}`);
   });
 })();

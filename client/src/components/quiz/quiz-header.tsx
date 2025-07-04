@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SparkAILogo } from '@/components/ui/logo';
 import { AgentChat } from './agent-chat';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
 interface QuizHeaderProps {
   currentQuestion: number;
@@ -28,6 +29,22 @@ export function QuizHeader({
 }: QuizHeaderProps) {
   const progressPercentage = (currentQuestion / totalQuestions) * 100;
 
+  const formatTime = (timeStr: string) => {
+    // Convert the time string to a number
+    const totalSeconds = parseInt(timeStr, 10);
+    if (isNaN(totalSeconds)) return "00:00";
+    
+    // Calculate minutes and seconds
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    
+    // Pad with zeros if needed
+    const paddedMinutes = minutes.toString().padStart(2, '0');
+    const paddedSeconds = seconds.toString().padStart(2, '0');
+    
+    return `${paddedMinutes}:${paddedSeconds}`;
+  };
+
   return (
     <header className="gradient-header shadow-2xl border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,13 +59,8 @@ export function QuizHeader({
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {/* Score Display */}
-            <div className="flex items-center space-x-3">
-              <div className="text-sm text-white/80 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">
-                <span className="font-medium">Score: </span>
-                <span className="text-green-300 font-bold">{correctAnswers}</span>
-                <span className="text-white/60">/{answeredQuestions}</span>
-              </div>
+            {/* Assessment Session Info */}
+            <div className="flex items-center">
               <div className="text-sm text-white/80 bg-white/10 px-3 py-1 rounded-lg backdrop-blur-sm">
                 <span className="font-medium">Assessment Session</span> | 
                 <span className="ml-1">{new Date().toLocaleDateString()}</span>
@@ -57,10 +69,7 @@ export function QuizHeader({
             
             <div className="flex items-center space-x-2">
               <AgentChat />
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                <span className="sr-only">Export Results</span>
-                📥
-              </Button>
+              <ThemeSwitcher />
             </div>
           </div>
         </div>
@@ -82,7 +91,7 @@ export function QuizHeader({
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-sm text-white bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm animate-pulse-glow">
                 <Clock className="w-4 h-4 text-blue-300 animate-spin" style={{animationDuration: '8s'}} />
-                <span className="font-mono font-medium animate-shimmer">{timeRemaining}</span>
+                <span className="font-mono font-medium animate-shimmer">{formatTime(timeRemaining)}</span>
               </div>
               <Button 
                 variant="ghost" 

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRoute } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,18 +6,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Download, RotateCcw, Eye } from 'lucide-react';
-import type { QuizResult } from '@shared/schema';
+import type { QuizResult, Question, QuizSession } from '@shared/schema';
+import { AnswerReport } from '@/components/quiz/answer-report';
 
 export default function Results() {
   const [match, params] = useRoute('/results/:sessionId');
   const sessionId = params?.sessionId ? parseInt(params.sessionId) : null;
 
-  const { data: results = [], isLoading } = useQuery<QuizResult[]>({
+  const { data: results = [], isLoading: isLoadingResults } = useQuery<QuizResult[]>({
     queryKey: ['/api/quiz-results/session', sessionId],
     enabled: !!sessionId,
   });
 
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery<Question[]>({
+    queryKey: ['/api/questions'],
+  });
+
+  const { data: session, isLoading: isLoadingSession } = useQuery<QuizSession>({
+    queryKey: ['/api/quiz-sessions', sessionId],
+  });
+
   const result = results[0]; // Get the latest result
+  const isLoading = isLoadingResults || isLoadingQuestions || isLoadingSession;
 
   if (isLoading) {
     return (
@@ -29,7 +40,7 @@ export default function Results() {
     );
   }
 
-  if (!result) {
+  if (!result || !session || !questions.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
@@ -99,49 +110,6 @@ export default function Results() {
             </CardContent>
           </Card>
 
-          {/* Category Breakdown */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(result.categoryBreakdown as Record<string, { correct: number; total: number }>).map(([category, scores]) => {
-                  const percentage = Math.round((scores.correct / scores.total) * 100);
-                  const getCategoryIcon = (cat: string) => {
-                    switch (cat) {
-                      case 'AI Ethics': return '🧠';
-                      case 'Compliance': return '🛡️';
-                      case 'Risk Management': return '⚠️';
-                      case 'Implementation': return '⚙️';
-                      default: return '📋';
-                    }
-                  };
-
-                  return (
-                    <div key={category} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">{getCategoryIcon(category)}</span>
-                          <span className="font-medium text-gray-900">{category}</span>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <span className="text-sm text-gray-600">
-                            {scores.correct}/{scores.total} correct
-                          </span>
-                          <span className={`font-semibold ${getScoreColor(percentage)}`}>
-                            {percentage}%
-                          </span>
-                        </div>
-                      </div>
-                      <Progress value={percentage} className="h-2" />
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Action Buttons */}
           <Card>
             <CardContent className="pt-6">
@@ -179,13 +147,9 @@ export default function Results() {
                 {result.overallScore < 80 && (
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <h4 className="font-medium text-yellow-800 mb-2">Areas for Improvement</h4>
-                    <ul className="text-sm text-yellow-700 space-y-1">
-                      {Object.entries(result.categoryBreakdown as Record<string, { correct: number; total: number }>)
-                        .filter(([, scores]) => (scores.correct / scores.total) < 0.8)
-                        .map(([category]) => (
-                          <li key={category}>• Focus on {category} principles and best practices</li>
-                        ))}
-                    </ul>
+                    <p className="text-sm text-yellow-700">
+                      Focus on reviewing the questions you got wrong and understanding the correct answers.
+                    </p>
                   </div>
                 )}
                 
@@ -193,11 +157,27 @@ export default function Results() {
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <h4 className="font-medium text-green-800 mb-2">Excellent Performance!</h4>
                     <p className="text-sm text-green-700">
-                      You demonstrate strong understanding of AI audit principles. Consider sharing your knowledge with colleagues.
+                      You demonstrate strong understanding of the assessment topics. Consider sharing your knowledge with colleagues.
                     </p>
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Answer Report */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Answers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AnswerReport
+                answers={session.answers as Record<string, string>}
+                questions={questions}
+                onExport={() => {
+                  console.log('Exporting results...');
+                }}
+              />
             </CardContent>
           </Card>
         </div>

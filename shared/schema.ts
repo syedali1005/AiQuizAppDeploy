@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations, sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -19,12 +20,16 @@ export const quizSessions = pgTable("quiz_sessions", {
   isCompleted: boolean("is_completed").notNull().default(false),
   score: integer("score"),
   categoryScores: jsonb("category_scores").default({}),
+  userName: text("user_name"),
+  companyName: text("company_name"),
+  email: text("email"),
+  contactNumber: text("contact_number"),
 });
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   category: text("category").notNull(),
-  type: text("type").notNull(), // 'multiple-choice', 'true-false', 'short-answer'
+  type: text("type").notNull(), // 'multiple-choice', 'text', 'multiple-choice-multiple'
   question: text("question").notNull(),
   options: jsonb("options"), // For multiple choice questions
   correctAnswer: text("correct_answer").notNull(),
@@ -39,6 +44,7 @@ export const quizResults = pgTable("quiz_results", {
   correctAnswers: integer("correct_answers").notNull(),
   overallScore: integer("overall_score").notNull(),
   categoryBreakdown: jsonb("category_breakdown").notNull(),
+  aiEfficiencyScore: integer("ai_efficiency_score").notNull(),
   completedAt: timestamp("completed_at").notNull(),
 });
 
@@ -47,13 +53,18 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-export const insertQuizSessionSchema = createInsertSchema(quizSessions).omit({
-  id: true,
-  startTime: true,
+export const insertQuizSessionSchema = createInsertSchema(quizSessions, {
+  answers: z.record(z.string()),
+  userName: z.string().min(1, "Name is required"),
+  companyName: z.string().min(1, "Company name is required"),
+  email: z.string().email("Invalid email address"),
+  contactNumber: z.string().min(1, "Contact number is required"),
 });
 
-export const insertQuestionSchema = createInsertSchema(questions).omit({
-  id: true,
+export const insertQuestionSchema = createInsertSchema(questions, {
+  type: z.enum(['multiple-choice', 'text', 'multiple-choice-multiple']),
+  options: z.array(z.string()).optional(),
+  explanation: z.string().optional(),
 });
 
 export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
