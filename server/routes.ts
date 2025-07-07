@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { reportService } from "./reportService";
 import { insertQuizSessionSchema, insertQuizResultSchema, type Question } from "@shared/schema";
 import { z } from "zod";
 import OpenAI from "openai";
@@ -35,12 +36,24 @@ ${JSON.stringify(assessmentData, null, 2)}
 
 Provide only a numeric score between 0 and 100.`;
 
-    const response = await client.responses.create({
-      model: "gpt-4o-mini-2024-07-18",
-      input: prompt
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are an AI assessment expert. Analyze survey responses and provide only a numeric score between 0-100."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 10,
+      temperature: 0.3
     });
 
-    const score = parseInt(response.output_text || "0");
+    const scoreText = response.choices[0]?.message?.content || "50";
+    const score = parseInt(scoreText.replace(/[^0-9]/g, ''));
     return Math.min(Math.max(score, 0), 100); // Ensure score is between 0 and 100
   } catch (error) {
     console.error('Error calculating AI efficiency score:', error);
@@ -72,9 +85,9 @@ ${context.questions ? `- Available Questions: ${JSON.stringify(context.questions
 
 Respond in a helpful, professional manner, focusing on practical solutions and actionable advice. When suggesting tools or improvements, be specific and explain the benefits.`;
 
-    const response = await client.responses.create({
-      model: "gpt-4o-mini-2024-07-18",
-      input: [
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
         {
           role: "system",
           content: systemPrompt
@@ -83,10 +96,12 @@ Respond in a helpful, professional manner, focusing on practical solutions and a
           role: "user",
           content: message
         }
-      ]
+      ],
+      max_tokens: 500,
+      temperature: 0.7
     });
 
-    return response.output_text || "I apologize, but I'm having trouble generating a response. Please try asking your question again.";
+    return response.choices[0]?.message?.content || "I apologize, but I'm having trouble generating a response. Please try asking your question again.";
   } catch (error) {
     console.error('Error getting AI chat response:', error);
     throw error;
@@ -294,6 +309,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create quiz result
       const result = await storage.createQuizResult(quizResultData);
+      
+      // Generate and send AI audit report
+      try {
+        await reportService.generateAndSendReport(session, questions, result);
+        console.log('AI audit report generated and sent successfully');
+      } catch (reportError) {
+        console.error('Failed to generate/send report:', reportError);
+        // Don't fail the quiz submission if report generation fails
+      }
       
       res.json({
         ...result,

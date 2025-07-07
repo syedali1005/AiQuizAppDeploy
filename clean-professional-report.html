@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Audit Report - SparkAI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .container {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 25mm 25mm 25mm 0;
+      background: white;
+      min-height: 297mm;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #6c63ff;
+      margin-bottom: 30px;
+      min-height: 40px;
+    }
+    .logo-section { display: flex; align-items: center; justify-content: flex-start; gap: 10px; }
+    .logo img { height: 25px; width: auto; max-width: 80px; object-fit: contain; display: block; }
+    .company-info { text-align: right; }
+    .company-name { font-size: 18px; font-weight: 700; color: #6c63ff; margin-bottom: 4px; }
+    .date { color: #666; font-size: 12px; font-weight: 500; }
+    .report-title {
+      font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 8px;
+      color: #0f172a; letter-spacing: -0.5px;
+    }
+    .report-subtitle {
+      font-size: 16px; color: #666; text-align: center; margin-bottom: 30px; font-weight: 400;
+    }
+    .client-info {
+      background: #f8fafc; padding: 20px; border: 1px solid #e2e8f0;
+      margin-bottom: 30px; border-radius: 8px;
+    }
+    .client-info h3 {
+      color: #6c63ff; font-size: 14px; font-weight: 600;
+      margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .client-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .client-detail-item { display: flex; align-items: center; gap: 8px; }
+    .client-detail-label {
+      font-weight: 600; color: #374151; min-width: 80px;
+    }
+    .client-detail-value { color: #1a1a1a; }
+    .section { margin-bottom: 35px; }
+    .section-title {
+      font-size: 20px; font-weight: 700; color: #1a1a1a;
+      margin-bottom: 15px; padding-bottom: 8px;
+      border-bottom: 2px solid #6c63ff; position: relative;
+    }
+    .section-title::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 60px; height: 2px; background: #6c63ff;
+    }
+    .score-section {
+      background: #f8fafc; padding: 30px; border: 2px solid #6c63ff;
+      border-radius: 12px; margin-bottom: 30px; text-align: center;
+    }
+    .score-title {
+      font-size: 16px; font-weight: 600; margin-bottom: 15px;
+      color: #374151; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .score-value {
+      font-size: 48px; font-weight: 800; color: #6c63ff;
+      margin-bottom: 10px; line-height: 1;
+    }
+    .score-level {
+      font-size: 16px; font-weight: 600; color: #1a1a1a;
+      margin-bottom: 20px; background: #e6e6ff;
+      padding: 8px 20px; border-radius: 25px; display: inline-block;
+    }
+    .score-bar { width: 100%; height: 12px; background: #e2e8f0;
+      border-radius: 6px; overflow: hidden; margin-bottom: 15px;
+    }
+    .score-progress {
+      height: 100%; background: #6c63ff; border-radius: 6px;
+      transition: width 0.3s ease;
+    }
+    .score-description {
+      font-size: 14px; color: #4b5563; line-height: 1.6;
+      max-width: 600px; margin: 0 auto;
+    }
+    .recommendations-table {
+      width: 100%; border-collapse: collapse; margin-top: 15px;
+      border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+    }
+    .recommendations-table th, .recommendations-table td {
+      padding: 15px; text-align: left; border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+    .recommendations-table th {
+      background: #6c63ff; color: white; font-weight: 600;
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .priority-high { color: #dc2626; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .priority-medium { color: #f59e0b; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .priority-low { color: #10b981; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .ai-badge {
+      display: inline-block; background: #6c63ff; color: white;
+      padding: 6px 12px; border-radius: 20px; font-size: 11px;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      margin-left: 10px;
+    }
+    .cta-section {
+      text-align: center; margin-top: 40px; padding: 25px 20px;
+      border-top: 2px solid #6c63ff; background: #f9f9ff;
+    }
+    .cta-section p { font-size: 16px; color: #1e293b; }
+    .cta-section a { color: #6c63ff; font-weight: 600; text-decoration: none; }
+    .cta-section a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo">
+          <img src="attached_assets/Spark AI Logo - Black.png" alt="SparkAI" />
+        </div>
+      </div>
+      <div class="company-info">
+        <div class="company-name">SparkAI.ae</div>
+        <div class="date">May 27, 2024</div>
+      </div>
+    </div>
+
+    <h1 class="report-title">AI Audit Report</h1>
+    <p class="report-subtitle">Comprehensive Analysis & Strategic Recommendations</p>
+
+    <div class="client-info">
+      <h3>Assessment Details</h3>
+      <div class="client-details">
+        <div class="client-detail-item">
+          <span class="client-detail-label">Client:</span>
+          <span class="client-detail-value">John Smith</span>
+        </div>
+        <div class="client-detail-item">
+          <span class="client-detail-label">Company:</span>
+          <span class="client-detail-value">TechCorp Solutions</span>
+        </div>
+        <div class="client-detail-item">
+          <span class="client-detail-label">Date:</span>
+          <span class="client-detail-value">May 27, 2024</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Executive Summary</h2>
+      <p>Based on our comprehensive assessment of your organization's AI readiness, we have identified significant opportunities for implementing AI solutions that can transform your business operations. The analysis reveals both strengths in your current processes and areas where AI implementation could drive substantial improvements in efficiency and effectiveness.</p>
+    </div>
+
+    <div class="score-section">
+      <div class="score-title">AI Readiness Score</div>
+      <div class="score-value">78%</div>
+      <div class="score-level">Advanced<span class="ai-badge">AI Ready</span></div>
+      <div class="score-bar">
+        <div class="score-progress" style="width: 78%"></div>
+      </div>
+      <div class="score-description">
+        Your organization demonstrates strong potential for AI adoption with well-structured digital processes and data management practices. There are specific areas where AI implementation could significantly enhance operational efficiency and decision-making capabilities.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Key Recommendations</h2>
+      <table class="recommendations-table">
+        <thead>
+          <tr><th>Area</th><th>Recommendation</th><th>Priority</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Data Management</td>
+            <td>Implement automated data validation and cleaning processes using AI</td>
+            <td><span class="priority-high">High</span></td>
+          </tr>
+          <tr>
+            <td>Process Automation</td>
+            <td>Deploy AI-powered workflow automation for routine tasks</td>
+            <td><span class="priority-medium">Medium</span></td>
+          </tr>
+          <tr>
+            <td>Customer Service</td>
+            <td>Integrate AI chatbots for 24/7 customer support</td>
+            <td><span class="priority-low">Low</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cta-section">
+      <p>
+        Ready to transform your business with AI?
+        <a href="https://sparkai.ae" target="_blank">Book your free strategy call at Sparkai.ae</a>
+        — let’s turn insights into impact.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
