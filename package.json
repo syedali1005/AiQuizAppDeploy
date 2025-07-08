@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "tsx dev-server.ts",
-    "build": "vite build",
+    "build": "vite build && node copy-assets.js",
     "start": "vite preview",
     "check": "tsc",
     "db:push": "drizzle-kit push",

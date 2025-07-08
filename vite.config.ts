@@ -27,6 +27,11 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name].[ext]'
+      }
+    }
   },
   server: {
     port: 5000,
@@ -38,4 +43,5 @@ export default defineConfig({
       },
     },
   },
+  publicDir: path.resolve(import.meta.dirname, "attached_assets"),
 });
