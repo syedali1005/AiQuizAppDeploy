@@ -42,11 +42,23 @@ export class DrizzleStorage implements IStorage {
     if (this.initialized) return;
     
     try {
+      console.log('🚀 Initializing storage...');
+      console.log('Environment check - DATABASE_URL exists:', !!process.env.DATABASE_URL);
+      
       await this.initializeQuestions();
       await this.updateFirstQuestion();
       this.initialized = true;
+      console.log('✅ Storage initialization completed successfully');
     } catch (error) {
-      console.error('Storage initialization error:', error);
+      console.error('❌ Storage initialization error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        env: {
+          NODE_ENV: process.env.NODE_ENV,
+          DATABASE_URL_SET: !!process.env.DATABASE_URL
+        }
+      });
       throw error;
     }
   }
@@ -106,8 +118,16 @@ export class DrizzleStorage implements IStorage {
 
   // Quiz Session methods
   async createQuizSession(insertSession: InsertQuizSession): Promise<QuizSession> {
-    await this.initialize();
     try {
+      console.log('📝 Creating quiz session with data:', {
+        userName: insertSession.userName,
+        companyName: insertSession.companyName,
+        email: insertSession.email,
+        hasContactNumber: !!insertSession.contactNumber
+      });
+      
+      await this.initialize();
+      
       const result = await db.insert(quizSessions).values({
         ...insertSession,
         startTime: new Date(),
@@ -116,9 +136,12 @@ export class DrizzleStorage implements IStorage {
         timeRemaining: 1800,
         isCompleted: false
       }).returning();
+      
+      console.log('✅ Quiz session created successfully:', result[0].id);
       return result[0];
     } catch (error) {
-      console.error('Error in createQuizSession:', error);
+      console.error('❌ Error in createQuizSession:', error);
+      console.error('Session data that failed:', insertSession);
       throw error;
     }
   }
