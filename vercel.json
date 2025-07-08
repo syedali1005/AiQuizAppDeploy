@@ -1,12 +1,15 @@
 {
-    "version": 2,
-    "name": "ai-quiz-app",
-    "buildCommand": "npm run build",
-    "outputDirectory": "dist/public",
-    "rewrites": [
-      {
-        "source": "/api/(.*)",
-        "destination": "/api"
-      }
-    ]
-  }
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    }
+  ]
+}

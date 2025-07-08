@@ -1,0 +1,11 @@
+server/
+dev-server.js
+*.md
+.env.example
+test-*.js
+coverage/
+.nyc_output/
+node_modules/
+.git/
+.DS_Store
+*.log 
