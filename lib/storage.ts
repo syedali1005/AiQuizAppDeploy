@@ -12,7 +12,7 @@ import {
   type InsertQuestion,
   type QuizResult,
   type InsertQuizResult
-} from "../shared/schema";
+} from "./schema.js";
 import { eq, asc, sql } from 'drizzle-orm';
 
 export interface IStorage {

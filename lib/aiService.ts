@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import type { Question } from '../shared/schema';
+import type { Question } from './schema.js';
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
