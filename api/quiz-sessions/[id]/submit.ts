@@ -1,6 +1,6 @@
-import { storage } from '../../../lib/storage';
-import { reportService } from '../../../lib/reportService';
-import { calculateAIEfficiencyScore } from '../../../lib/aiService';
+import { storage } from '../../../lib/storage.js';
+import { reportService } from '../../../lib/reportService.js';
+import { calculateAIEfficiencyScore } from '../../../lib/aiService.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {

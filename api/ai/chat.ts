@@ -1,5 +1,5 @@
-import { getAIChatResponse } from '../../lib/aiService';
-import { storage } from '../../lib/storage';
+import { getAIChatResponse } from '../../lib/aiService.js';
+import { storage } from '../../lib/storage.js';
 import { z } from 'zod';
 
 const chatMessageSchema = z.object({
