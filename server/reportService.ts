@@ -520,7 +520,7 @@ Focus on practical, implementable solutions that match the user's current AI mat
       });
       console.log('📧 Using Gmail SMTP configuration');
     } else {
-      // Hostinger or other SMTP configuration
+      // Hostinger or other SMTP configuration - Optimized for Vercel
       transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.hostinger.com',
         port: parseInt(process.env.SMTP_PORT || '587'),
@@ -531,7 +531,11 @@ Focus on practical, implementable solutions that match the user's current AI mat
         },
         tls: {
           rejectUnauthorized: false // Accept self-signed certificates
-        }
+        },
+        // Add these settings for Vercel/serverless compatibility
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000,   // 30 seconds
+        socketTimeout: 60000      // 60 seconds
       });
       console.log(`📧 Using SMTP configuration: ${process.env.SMTP_HOST || 'smtp.hostinger.com'}`);
     }
@@ -554,8 +558,20 @@ Focus on practical, implementable solutions that match the user's current AI mat
     };
 
     console.log(`📎 Email prepared with PDF attachment (${pdfBuffer.length} bytes)`);
-    await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully with PDF attachment');
+    
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully with PDF attachment');
+    } catch (error) {
+      console.error('❌ Email sending failed:', error);
+      console.error('SMTP Configuration:', {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        user: process.env.EMAIL_USER,
+        hasPass: !!process.env.EMAIL_PASS
+      });
+      throw error; // Re-throw to handle it in the calling function
+    }
   }
 
   /**
