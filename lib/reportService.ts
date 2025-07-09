@@ -621,31 +621,74 @@ class ReportService {
   }
 
   private async sendEmailWithPDF(reportData: ReportData, pdfBuffer: Buffer): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    // Determine email provider based on EMAIL_USER
+    const isGmail = process.env.EMAIL_USER?.includes('@gmail.com');
+    
+    let transporter;
+    
+    if (isGmail) {
+      // Gmail configuration
+      transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+      console.log('📧 Using Gmail SMTP configuration');
+    } else {
+      // Hostinger or other SMTP configuration - Optimized for Vercel
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false, // Use STARTTLS
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: {
+          rejectUnauthorized: false // Accept self-signed certificates
+        },
+        // Add these settings for Vercel/serverless compatibility
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000,   // 30 seconds
+        socketTimeout: 60000      // 60 seconds
+      });
+      console.log(`📧 Using SMTP configuration: ${process.env.SMTP_HOST || 'smtp.hostinger.com'}`);
+    }
 
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: {
+        name: 'SparkAI Team',
+        address: process.env.EMAIL_USER || 'contactus@sparkai.ae'
+      },
       to: reportData.email,
       subject: this.getEmailSubject(reportData),
       html: this.generateEmailTemplate(reportData),
       attachments: [
         {
-          filename: `AI_Audit_Report_${reportData.companyName.replace(/\s+/g, '_')}.pdf`,
+          filename: `AI-Audit-Report-${reportData.companyName.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
         }
       ]
     };
 
-    await transporter.sendMail(mailOptions);
+    console.log(`📎 Email prepared with PDF attachment (${pdfBuffer.length} bytes)`);
+    
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully with PDF attachment');
+    } catch (error) {
+      console.error('❌ Email sending failed:', error);
+      console.error('SMTP Configuration:', {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        user: process.env.EMAIL_USER,
+        hasPass: !!process.env.EMAIL_PASS
+      });
+      throw error; // Re-throw to handle it in the calling function
+    }
   }
 
   private getEmailSubject(reportData: ReportData): string {
