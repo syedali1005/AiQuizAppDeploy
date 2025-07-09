@@ -629,8 +629,14 @@ class ReportService {
     console.log('SMTP_HOST:', process.env.SMTP_HOST || 'smtp.hostinger.com');
     console.log('SMTP_PORT:', process.env.SMTP_PORT || '587');
     
+    // Validate required environment variables
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('Missing required email environment variables: EMAIL_USER and EMAIL_PASS');
+    }
+    
     // Determine email provider based on EMAIL_USER
     const isGmail = process.env.EMAIL_USER?.includes('@gmail.com');
+    const isOutlook = process.env.EMAIL_USER?.includes('@outlook.com') || process.env.EMAIL_USER?.includes('@hotmail.com');
     
     let transporter: any;
     
@@ -644,6 +650,22 @@ class ReportService {
         }
       });
       console.log('📧 Using Gmail SMTP configuration');
+    } else if (isOutlook) {
+      // Outlook/Hotmail configuration
+      transporter = nodemailer.createTransport({
+        host: 'smtp-mail.outlook.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false
+        }
+      });
+      console.log('📧 Using Outlook SMTP configuration');
     } else {
       // Hostinger or other SMTP configuration - Optimized for Vercel
       transporter = nodemailer.createTransport({
@@ -665,6 +687,15 @@ class ReportService {
       console.log(`📧 Using SMTP configuration: ${process.env.SMTP_HOST || 'smtp.hostinger.com'}`);
     }
 
+    // Verify SMTP connection before sending
+    try {
+      await transporter.verify();
+      console.log('✅ SMTP connection verified successfully');
+    } catch (verifyError) {
+      console.error('❌ SMTP connection verification failed:', verifyError);
+      throw new Error(`SMTP connection failed: ${verifyError}`);
+    }
+
     const mailOptions = {
       from: {
         name: 'SparkAI Team',
@@ -683,19 +714,32 @@ class ReportService {
     };
 
     console.log(`📎 Email prepared with PDF attachment (${pdfBuffer.length} bytes)`);
+    console.log(`📧 Sending to: ${reportData.email}`);
+    console.log(`📧 From: ${process.env.EMAIL_USER}`);
     
     try {
-      await transporter.sendMail(mailOptions);
+      const result = await transporter.sendMail(mailOptions);
       console.log('✅ Email sent successfully with PDF attachment');
-    } catch (error) {
+      console.log('📧 Message ID:', result.messageId);
+    } catch (error: any) {
       console.error('❌ Email sending failed:', error);
       console.error('SMTP Configuration:', {
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
         user: process.env.EMAIL_USER,
-        hasPass: !!process.env.EMAIL_PASS
+        hasPass: !!process.env.EMAIL_PASS,
+        isGmail,
+        isOutlook
       });
-      throw error; // Re-throw to handle it in the calling function
+      
+      // Provide more specific error messages
+      if (error.code === 'EAUTH') {
+        throw new Error('Email authentication failed. Please check your EMAIL_USER and EMAIL_PASS credentials.');
+      } else if (error.code === 'ECONNECTION') {
+        throw new Error('Email connection failed. Please check your SMTP settings.');
+      } else {
+        throw new Error(`Email sending failed: ${error.message || 'Unknown error'}`);
+      }
     }
   }
 
