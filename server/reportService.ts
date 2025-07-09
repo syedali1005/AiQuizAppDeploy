@@ -520,7 +520,7 @@ Focus on practical, implementable solutions that match the user's current AI mat
     const isGmail = process.env.EMAIL_USER?.includes('@gmail.com');
     const isOutlook = process.env.EMAIL_USER?.includes('@outlook.com') || process.env.EMAIL_USER?.includes('@hotmail.com');
     
-    let transporter;
+    let transporter: any;
     
     if (isGmail) {
       // Gmail configuration
@@ -625,16 +625,10 @@ Focus on practical, implementable solutions that match the user's current AI mat
     }
   }
 
-  /**
-   * Customize the email subject line here
-   */
   private getEmailSubject(reportData: ReportData): string {
-    return `🚀 Your AI Audit Report is Ready - ${reportData.companyName}`;
+    return `Your AI Efficiency Report - ${reportData.aiEfficiencyScore}/100 Score | ${reportData.companyName}`;
   }
 
-  /**
-   * Customize the email template here - modify this method to change the email content
-   */
   private generateEmailTemplate(reportData: ReportData): string {
     return `
       <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
